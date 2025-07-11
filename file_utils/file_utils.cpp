@@ -6,6 +6,7 @@
 #include <algorithm>
 
 FileUtils::FileUtils(const std::string &n_file_directory){
+
     this -> file_directory = n_file_directory;
 
     std::string n_file_name;
@@ -37,15 +38,18 @@ const std::string& FileUtils::getFileContent(){
     if(is_read){
         return file_content;
     }else{
-        throw std::runtime_error("could not get file content as file could not be processed");
+        throw std::runtime_error("could not get file content as file could not be processed \n");
     }
 }
 
 void FileUtils::readFileContent(const std::string &directory) noexcept(false){
+
+    std::cout << "reading file..." << "\n";
+
     raw_file.open(directory, std::ios::out); //open file for output REMEMBER TO CLOSE
 
     if(!raw_file.is_open()){
-        std::runtime_error("could not open file with name: "+directory);
+        throw std::runtime_error("could not open file with name: "+directory+" \n");
     }
 
     std::ostringstream stream;

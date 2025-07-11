@@ -1,6 +1,6 @@
 #include "tree.h"
 
-namespace datastructures{
+namespace data_structures{
 
     TreeNode::TreeNode(): left(nullptr), right(nullptr){};
     TreeNode::TreeNode(int n_frequency): frequency(n_frequency), left(nullptr), right(nullptr){};

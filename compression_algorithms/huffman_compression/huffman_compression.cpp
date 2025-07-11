@@ -1,5 +1,5 @@
 #include "huffman_compression.h"
-#include "datastructures/tree/tree.h"
+#include "data_structures/tree/tree.h"
 
 
 
@@ -9,7 +9,7 @@ HuffmanCompression::HuffmanCompression(const std::string &n_file_content){
 
     if(node_minheap.size() == 1){//edge case where we only have one element in our heap //(i.e only one unique element)
 
-        datastructures::TreeNode * only_node = node_minheap.top();
+        data_structures::TreeNode * only_node = node_minheap.top();
 
         char only_char = only_node-> value;
 
@@ -20,7 +20,7 @@ HuffmanCompression::HuffmanCompression(const std::string &n_file_content){
         delete only_node;
         only_node = nullptr;
     }else{
-        datastructures::TreeNode * huffman_tree = &constructHuffmanTree(node_minheap);
+        data_structures::TreeNode * huffman_tree = &constructHuffmanTree(node_minheap);
         std::string huffman_code;
 
         populateDecodeMap(huffman_tree, huffman_decode_map, huffman_code);
@@ -32,7 +32,7 @@ HuffmanCompression::HuffmanCompression(const std::string &n_file_content){
 /*
  * add values to min heap
  */
-void HuffmanCompression::populateNodeMinHeap(const std::string &file_content, std::priority_queue<datastructures::TreeNode*, std::vector<datastructures::TreeNode*>, datastructures::TreeNode::compare> &node_minheap){
+void HuffmanCompression::populateNodeMinHeap(const std::string &file_content, std::priority_queue<data_structures::TreeNode*, std::vector<data_structures::TreeNode*>, data_structures::TreeNode::compare> &node_minheap){
     std::unordered_map<char, int> frequency_map;
 
     for(char c : file_content){//generate frequency map
@@ -44,7 +44,7 @@ void HuffmanCompression::populateNodeMinHeap(const std::string &file_content, st
     }
 
     for(const auto &map_pair : frequency_map){//loop through address
-        datastructures::TreeNode * node = new datastructures::TreeNode(map_pair.second, map_pair.first);
+        data_structures::TreeNode * node = new data_structures::TreeNode(map_pair.second, map_pair.first);
         node_minheap.push(node);
     }
 }
@@ -53,18 +53,18 @@ void HuffmanCompression::populateNodeMinHeap(const std::string &file_content, st
  * construct huffman tree using node min_heap;
  */
 
-datastructures::TreeNode& HuffmanCompression::constructHuffmanTree(std::priority_queue<datastructures::TreeNode*, std::vector<datastructures::TreeNode*>, datastructures::TreeNode::compare> &node_minheap){
+data_structures::TreeNode& HuffmanCompression::constructHuffmanTree(std::priority_queue<data_structures::TreeNode*, std::vector<data_structures::TreeNode*>, data_structures::TreeNode::compare> &node_minheap){
     while(node_minheap.size() > 1){
-        datastructures::TreeNode * combination_node;
+        data_structures::TreeNode * combination_node;
 
-        datastructures::TreeNode * first_node = node_minheap.top();
+        data_structures::TreeNode * first_node = node_minheap.top();
         node_minheap.pop();//remove ptr from queue
 
-        datastructures::TreeNode * second_node = node_minheap.top();
+        data_structures::TreeNode * second_node = node_minheap.top();
         node_minheap.pop();//remove ptr from queue
 
         int sum_frequency = first_node -> frequency + second_node -> frequency;
-        combination_node = new datastructures::TreeNode(sum_frequency);//combine node frequency and create new nodesecon
+        combination_node = new data_structures::TreeNode(sum_frequency);//combine node frequency and create new nodesecon
 
         combination_node -> left = first_node;
         combination_node -> right = second_node; //assign left and right nodes to new tree;
@@ -78,7 +78,7 @@ datastructures::TreeNode& HuffmanCompression::constructHuffmanTree(std::priority
 /*
  * create decode map which allows for decompression
  */
-void HuffmanCompression::populateDecodeMap(datastructures::TreeNode * huffman_tree, std::unordered_map<char, std::string> &huffman_map, std::string &huffman_code){
+void HuffmanCompression::populateDecodeMap(data_structures::TreeNode * huffman_tree, std::unordered_map<char, std::string> &huffman_map, std::string &huffman_code){
     if(huffman_tree -> left == nullptr && huffman_tree -> right == nullptr){
         huffman_map[huffman_tree -> value] =  huffman_code;
         return;

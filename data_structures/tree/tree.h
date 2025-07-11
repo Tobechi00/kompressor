@@ -1,6 +1,6 @@
 #pragma once
 
-namespace datastructures{
+namespace data_structures{
 
     struct TreeNode{// tree node def
 

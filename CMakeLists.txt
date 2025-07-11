@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+#set standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 ## Use the variable PROJECT_NAME for changing the target name
 set( PROJECT_NAME "kompressor" )
 
@@ -13,7 +17,7 @@ FILE(GLOB SRCS "*.cpp" "*.c")
 
 set(SRCS
     main.cpp
-    datastructures/tree/tree.cpp
+    data_structures/tree/tree.cpp
     compression_algorithms/huffman_compression/huffman_compression.cpp
     file_utils/file_utils.cpp
 )
