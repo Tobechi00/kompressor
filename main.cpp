@@ -1,30 +1,25 @@
 #include <iostream>
 #include <string>
-#include <unordered_map>
-#include "compression_algorithms/huffman_compression/huffman_compression.h"
-#include "file_utils/file_utils.h"
+#include "commands/commands.h"
 
 
 int main(int argc, char* argv[]){
 
-    //todo set up logic for commandline
     //arg[1] - command
     //arg[2] - filepath
 
-    std::string file_content;
-
-    try {
-        FileUtils file_util(argv[2]);
-
-        HuffmanCompression huffman_compression(file_util.getFileContent());
-
-        std::unordered_map<char, std::string> map = huffman_compression.getHuffmanDecodeMap();
-
-        for(auto &pair : map){
-            std::cout << pair.first <<" -- " << pair.second << "\n";
-        }
-    } catch (std::exception &e) {
-        std::cerr << e.what();
+    //parse args depending on number
+    if(argc == 1){
+        commands::displayHelpMenu();
+    }else if(argc == 2){
+        std::string first_command = argv[1];
+        commands::parseCommand(first_command);
+    }else if(argc == 3){
+        std::string first_command = argv[1];
+        std::string second_command = argv[2];
+        commands::parseCommand(first_command, second_command);
+    }else{
+        std::cerr << "unrecognised command. See \'kompressor --help\'\n";
     }
 
 }

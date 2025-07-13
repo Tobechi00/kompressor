@@ -20,6 +20,7 @@ set(SRCS
     data_structures/tree/tree.cpp
     compression_algorithms/huffman_compression/huffman_compression.cpp
     file_utils/file_utils.cpp
+    commands/commands.cpp
 )
 
 ## Define the executable
