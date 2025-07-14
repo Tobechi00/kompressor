@@ -6,8 +6,24 @@
 
 namespace commands{
 
+    void parseCommand(int command_amount, char *command_array[]){
+
+        if(command_amount == 1){
+            commands::displayHelpMenu();
+        }else if(command_amount == 2){
+            std::string first_command = command_array[1];
+            commands::executeCommand(first_command);
+        }else if(command_amount == 3){
+            std::string first_command = command_array[1];
+            std::string second_command = command_array[2];
+            commands::executeCommand(first_command, second_command);
+        }else{
+            std::cerr << "unrecognised command. See \'kompressor --help\'\n";
+        }
+    }
+
     //temporary
-    void parseCommand(std::string &command, std::string &value){
+    void executeCommand(std::string &command, std::string &value){
 
         if(command == "-c" || command == "--compress"){ //value can only be a string, attempt to compress
 
@@ -31,7 +47,7 @@ namespace commands{
         }
     }
 
-    void parseCommand(std::string &command){
+    void executeCommand(std::string &command){
         if(command == "-h" || command == "--help"){
             displayHelpMenu();
         }else{
