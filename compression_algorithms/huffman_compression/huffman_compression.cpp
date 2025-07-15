@@ -13,7 +13,7 @@ HuffmanCompression::HuffmanCompression(const std::string &n_file_content){
 
         char only_char = only_node-> value;
 
-        huffman_decode_map[only_char] = 1; //assign single bit code to only char;
+        huffman_decode_map[only_char] = 1; //assign minimal length
 
         node_minheap.pop();
 
@@ -21,7 +21,7 @@ HuffmanCompression::HuffmanCompression(const std::string &n_file_content){
         only_node = nullptr;
     }else{
         data_structures::TreeNode * huffman_tree = &constructHuffmanTree(node_minheap);
-        std::string huffman_code;
+        int huffman_code = 0;
 
         populateDecodeMap(huffman_tree, huffman_decode_map, huffman_code);
     }
@@ -78,19 +78,18 @@ data_structures::TreeNode& HuffmanCompression::constructHuffmanTree(std::priorit
 /*
  * create decode map which allows for decompression
  */
-void HuffmanCompression::populateDecodeMap(data_structures::TreeNode * huffman_tree, std::unordered_map<char, std::string> &huffman_map, std::string &huffman_code){
+void HuffmanCompression::populateDecodeMap(data_structures::TreeNode * huffman_tree, std::unordered_map<char, int> &huffman_map, int code_length){
     if(huffman_tree -> left == nullptr && huffman_tree -> right == nullptr){
-        huffman_map[huffman_tree -> value] =  huffman_code;
+        huffman_map[huffman_tree -> value] =  code_length;
         return;
     }
 
-    //left == 0, right == 1 -- bit pattern
+    //generate length of each code for canonical huffman encoding
+    code_length++;
+    populateDecodeMap(huffman_tree -> right, huffman_map, code_length);
+    code_length--; //backtrack
 
-    huffman_code.push_back('1');
-    populateDecodeMap(huffman_tree -> right, huffman_map, huffman_code);
-    huffman_code.pop_back(); //backtrack
-
-    huffman_code.push_back('0');
-    populateDecodeMap(huffman_tree -> left, huffman_map, huffman_code);
-    huffman_code.pop_back();
+    code_length++;
+    populateDecodeMap(huffman_tree -> left, huffman_map, code_length);
+    code_length++;
 }

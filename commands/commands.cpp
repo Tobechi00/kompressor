@@ -32,7 +32,7 @@ namespace commands{
 
                 HuffmanCompression huffman_compression(file_util.getFileContent());
 
-                std::unordered_map<char, std::string> map = huffman_compression.getHuffmanDecodeMap();
+                std::unordered_map<char, int> map = huffman_compression.getHuffmanDecodeMap();
 
                 for(auto &pair : map){
                     std::cout << pair.first <<" -- " << pair.second << "\n";
