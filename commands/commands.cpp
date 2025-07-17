@@ -32,11 +32,12 @@ namespace commands{
 
                 HuffmanCompression huffman_compression(file_util.getFileContent());
 
-                std::unordered_map<char, int> map = huffman_compression.getHuffmanDecodeMap();
+                // std::unordered_map<char, int> map = huffman_compression.getHuffmanLengthMap();
 
-                for(auto &pair : map){
-                    std::cout << pair.first <<" -- " << pair.second << "\n";
-                }
+                // for(auto &pair : map){
+                //     std::cout << pair.first <<" -- " << pair.second << "\n";
+                // }
+
             } catch (std::exception &e) {
                 std::cerr << e.what();
             }
