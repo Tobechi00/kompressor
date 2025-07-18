@@ -30,6 +30,8 @@ class HuffmanCompression{
 
     void addOne(std::string &code);
 
+    void encodeContent(const std::string &content, std::string &binary_code, std::unordered_map<char, std::string> &huffman_binary_map);
+
     struct comparator {
         bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right);
     };

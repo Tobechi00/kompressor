@@ -1,14 +1,13 @@
 #include "huffman_compression.h"
 #include "data_structures/tree/tree.h"
 #include <algorithm>
-#include <bitset>
 #include <queue>
 #include <string>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
 
-//todo: rework add one function
+//todo: implement decode
 
 
 HuffmanCompression::HuffmanCompression(const std::string &n_file_content){
@@ -41,10 +40,13 @@ HuffmanCompression::HuffmanCompression(const std::string &n_file_content){
         convertLengthMapToBinary(huffman_length_map, huffman_binary_map);
     }
 
-    for(const auto &pair : HuffmanCompression::huffman_binary_map){
-        std::cout << pair.first <<" -- "<< pair.second << '\n';
-    }
+    std::string binary_code;
 
+    encodeContent(n_file_content, binary_code, huffman_binary_map);
+
+    std::cout << binary_code << '\n';
+    std::cout << "old size: "<< (n_file_content.length() * 8) << "bits \n";
+    std::cout << "new size: "<< (binary_code.length()) << "bits \n";
 }
 
 
@@ -119,7 +121,7 @@ void HuffmanCompression::convertLengthMapToBinary(std::unordered_map<char, int> 
         token_frequency_list.push_back(pair);
     }
 
-    //use vector to sort list based on
+    //use vector to sort list based on code length
     std::sort(token_frequency_list.begin(), token_frequency_list.end(), HuffmanCompression::comparator());
 
     const std::pair<char, int> * previous = nullptr; //pointer to previous element
@@ -162,13 +164,42 @@ bool HuffmanCompression::comparator::operator()(const std::pair<int,int> &left, 
     return left.second < right.second;
 }
 
-//used to increment binary representations
+//used to increment binary representation
 void HuffmanCompression::addOne(std::string &code){
 
-    int len = code.length();
-    int num_code = std::stoi(code, nullptr, 2);
-    num_code++;
-    std::bitset<32> binary_rep(num_code);
+    bool has_remainder = false;
 
-    code = binary_rep.to_string().substr(32 - len);
+    for(int i = code.length() - 1; i >= 0; i--){
+
+        if(!has_remainder){
+            if(code[i] == '0'){
+                code[i] = '1';
+                break;
+            }else{
+                code[i] = '0';
+                has_remainder = true;
+            }
+        }else{
+            if(code[i] == '0'){
+                code[i] = '1';
+                has_remainder = false;
+                break;
+            }else{
+                code[i] = '0';
+            }
+        }
+    }
+
+    if(has_remainder){
+        code = '1'+code;
+    }
+}
+
+
+//used to encode plain text to huffman coded binary
+void HuffmanCompression::encodeContent(const std::string &content, std::string &binary_code, std::unordered_map<char, std::string> &huffman_binary_map){
+
+    for(char c : content){
+        binary_code.append(huffman_binary_map[c]);
+    }
 }
