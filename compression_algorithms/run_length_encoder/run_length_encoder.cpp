@@ -6,7 +6,6 @@
 
 
 RunLengthEncoder::RunLengthEncoder(std::string &binary_str){
-
     if(binary_str.length() == 0){
         return;
     }

@@ -5,7 +5,6 @@
 #include "compression_algorithms/huffman_compression/huffman_compression.h"
 
 namespace commands{
-
     void parseCommand(int command_amount, char *command_array[]){
 
         if(command_amount == 1){
@@ -32,11 +31,7 @@ namespace commands{
 
                 HuffmanCompression huffman_compression(file_util.getFileContent());
 
-                // std::unordered_map<char, int> map = huffman_compression.getHuffmanLengthMap();
-
-                // for(auto &pair : map){
-                //     std::cout << pair.first <<" -- " << pair.second << "\n";
-                // }
+                file_util.createCompressedFile(huffman_compression.getBinaryCode());
 
             } catch (std::exception &e) {
                 std::cerr << e.what();

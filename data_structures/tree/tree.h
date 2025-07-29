@@ -1,19 +1,21 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
+
 namespace data_structures{
 
     struct TreeNode{// tree node def
 
         std::size_t frequency;
-        char value;
+        std::string value;
 
         TreeNode * left;
         TreeNode * right;
 
         TreeNode();
-        TreeNode(std::size_t n_frequency);
-        TreeNode(std::size_t n_frequency, char n_value);
+        TreeNode(std::size_t frequency);
+        TreeNode(std::size_t frequency, std::string value);
 
         ~TreeNode();
 
