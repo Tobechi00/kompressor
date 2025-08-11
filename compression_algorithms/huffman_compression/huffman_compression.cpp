@@ -4,15 +4,18 @@
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <queue>
 #include <string>
 #include <iostream>
+#include <sys/types.h>
 #include <unordered_map>
 #include <vector>
 
 //todo: change mapping to string to code to account for utf - 8 encoding, accumilator code at the bottom;
+// replace all 8 with byte enum
 
-
+//rework encoding
 HuffmanCompression::HuffmanCompression(const std::string &file_content){
 
     populateNodeMinHeap(file_content, this -> node_minheap);
@@ -39,18 +42,24 @@ HuffmanCompression::HuffmanCompression(const std::string &file_content){
         delete huffman_tree;
     }
 
-    this -> binary_code = new std::string();
 
-    encodeContent(file_content, *this -> binary_code, this -> huffman_binary_map);
+    //convert and attach map as file header
+    attachHeader(this -> binary_code, this -> huffman_binary_map);
+    encodeContent(file_content, this -> binary_code, this -> huffman_binary_map);
 
-    for(auto &pair : this -> huffman_binary_map){
-        std::cout << pair.first << " -- " << pair.second << "\n";
+    size_t old_size = file_content.length() * 8;
+    size_t new_size = this -> binary_code.length();
+
+    std::cout << "old size: "<< old_size << "bits \n";
+    std::cout << "new size: "<< new_size << "bits \n";
+    if(new_size < old_size){
+        size_t savings = old_size - new_size;
+        std::cout << "total space saved: "<< savings << "bits \n";
+    }else if(new_size == old_size){
+        std::cout << "file saw no change with compression\n";
+    }else{
+        std::cout << "file saw a size increment with compression \n";
     }
-
-
-    std::cout << binary_code << '\n';
-    std::cout << "old size: "<< (file_content.length() * 8) << "bits \n";
-    std::cout << "new size: "<< ( (*this -> binary_code).length()) << "bits \n";
 
 }
 
@@ -226,30 +235,21 @@ void HuffmanCompression::addOne(std::string &code){
 
 //used to encode plain text to huffman coded binary
 void HuffmanCompression::encodeContent(const std::string &content, std::string &binary_code, std::unordered_map<std::string, std::string> &huffman_binary_map){
+    std::string encoded_str;
 
     std::string buffer;
 
-    for(uint8_t c : content){
-        std::bitset<8> bits(c);
-        std::string bitval = bits.to_string();
+    for(const char c : content){
+        buffer.push_back(c);
+        auto map_iter = huffman_binary_map.find(buffer);
 
-        if(bitval.at(0) == '1' && bitval.at(1) == '0'){
-            buffer.push_back(c);
-        }else{
-            if(buffer.empty()){
-                buffer.push_back(c);
-            }else{
-                binary_code.append(buffer);
-                buffer.clear();
-                buffer.push_back(c);
-            }
+        if(map_iter != huffman_binary_map.end()){
+            encoded_str.append(huffman_binary_map[buffer]);
+            buffer.clear();
         }
     }
 
-
-    if(!buffer.empty()){
-        binary_code.append(buffer);
-    }
+    binary_code.append(encoded_str);
 }
 
 std::unordered_map<std::string, size_t>& HuffmanCompression::getHuffmanLengthMap(){
@@ -258,5 +258,54 @@ std::unordered_map<std::string, size_t>& HuffmanCompression::getHuffmanLengthMap
 
 
 std::string& HuffmanCompression::getBinaryCode(){
-    return (*this -> binary_code);
+    return (this -> binary_code);
+}
+
+void HuffmanCompression::attachHeader(std::string &binary_code, std::unordered_map<std::string, std::string> &huffman_binary_map){
+
+    //flatten map (dictionary) to put in file
+    // also attach 4byte length (32bit int)
+    std::string flat_map;
+    int bit_len = 32;//32 but not 100%, high diversity of utf-8 may break this specifies the length of our huffmancode
+
+    for(const auto &pair : huffman_binary_map){
+
+        for(uint8_t byte : pair.first){//convert char to byte rep
+            std::bitset<8> bit_rep(byte);
+            flat_map.append(bit_rep.to_string());
+        }
+
+        std::string code(pair.second);
+        int code_len = code.length();
+
+        // padding code incase to fit one byte;
+        int remainder = bit_len - code_len;
+        std::string padding_zeros(remainder, '0');
+        code.append(padding_zeros);
+
+        //converting actual code length to byte_rep
+        u_int8_t char_rep = static_cast<u_int8_t>(code_len);
+        std::bitset<8> len_bit_rep(code_len);
+
+
+        //append code length
+        flat_map.append(len_bit_rep.to_string());
+
+        //append code itself
+        flat_map.append(code);
+    }
+
+    int map_size = huffman_binary_map.size();//size of map not str
+
+    //map size has a possibility to be very large but
+    //thankfully nothing a good ol 32bit int cant hold
+
+    u_int32_t char_rep = static_cast<u_int32_t>(map_size);
+    std::bitset<32> maplen_bit_rep(char_rep);
+
+
+
+    binary_code.append(maplen_bit_rep.to_string());
+    binary_code.append(flat_map);
+    //convert binary map to full binary
 }

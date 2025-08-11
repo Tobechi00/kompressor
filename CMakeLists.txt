@@ -22,6 +22,7 @@ set(SRCS
     file_utils/file_utils.cpp
     commands/commands.cpp
     compression_algorithms/run_length_encoder/run_length_encoder.cpp
+    decompression_algorithms/huffman_decompression/huffman_decompression.cpp
 )
 
 ## Define the executable

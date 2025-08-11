@@ -23,6 +23,9 @@ FileUtils::FileUtils(const std::string &file_directory){
     if(this -> is_valid == true){
         this -> file_directory = file_directory;
         getFileNameFromPath(this -> file_directory, this -> file_name);
+
+        std::cout << file_directory<<"\n";
+        std::cout << this -> file_name;
     }
 }
 
@@ -66,6 +69,9 @@ void FileUtils::getFileNameFromPath(const std::string &directory, std::string &f
     std::reverse(file_name.begin(), file_name.end());
 }
 
+void FileUtils::createFile(const std::string &content){
+    //todo
+}
 void FileUtils::createCompressedFile(const std::string &bits){ //todo: add dictionary
 
     //temporary make sure to rework

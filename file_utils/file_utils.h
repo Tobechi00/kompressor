@@ -20,6 +20,7 @@ class FileUtils{
     public:
     const std::string& getFileContent();
     void createCompressedFile(const std::string &bits);
+    void createFile(const std::string &content);
 
     private:
     void readFileContent(const std::string &directory);

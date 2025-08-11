@@ -4,6 +4,7 @@
 #include<string>
 #include<vector>
 
+//unused class for now, ignore ;)
 class RunLengthEncoder{
 
     std::string rle_str;

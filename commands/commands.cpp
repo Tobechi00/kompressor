@@ -1,6 +1,7 @@
 #include "commands.h"
 #include <string>
 #include <iostream>
+#include "decompression_algorithms/huffman_decompression/huffman_decompression.h"
 #include "file_utils/file_utils.h"
 #include "compression_algorithms/huffman_compression/huffman_compression.h"
 
@@ -37,7 +38,13 @@ namespace commands{
                 std::cerr << e.what();
             }
         }else if(command == "-d" || command == "--decompress"){
-            //todo
+            FileUtils file_util(value);
+            HuffmanDecompression huffman_decompression(file_util.getFileContent());
+
+
+            // for(const auto pair : huffman_decompression.getMap()){
+            //     std::cout << pair.first +"  "+pair.second << "\n";
+            // }
         }else{
             std::cerr << "kompressor: \"" << command << "\" is not a kompressor command. See \'kompressor --help\'\n";
         }
