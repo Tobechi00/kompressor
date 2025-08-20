@@ -4,7 +4,7 @@ Kompressor is a text file compression tool based on the huffman compression algo
 
 ## how it works:
 
-kompressor makes use of an the huffman compression algorithm:
+kompressor makes use of the huffman compression algorithm, which works by creating replacement codes for characters based on their frequencies
 
 ### Compression:
 characters are read from a text file and assigned prefix free codes based on their respective frequencies,
