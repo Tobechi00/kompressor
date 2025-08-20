@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
-#include <sys/types.h>
 #include <unordered_map>
 class HuffmanDecompression{
+    private:
     std::string decompressed_text;
 
     public:
@@ -21,9 +22,9 @@ class HuffmanDecompression{
 
     std::string extractCode(const std::string &file_content, int code_len, int pos);
 
-    int populateDictionary(std::unordered_map<std::string, std::string> &str_code_map, const std::string &file_content);
+    size_t populateDictionary(std::unordered_map<std::string, std::string> &str_code_map, const std::string &file_content);
 
-    std::string convertBigEndian(u_int8_t byte);
+    std::string convertBigEndian(uint8_t byte);
 
-    char byteToChar(u_int8_t byte);
+    char byteToChar(uint8_t byte);
 };

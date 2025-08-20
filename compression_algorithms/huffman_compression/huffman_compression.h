@@ -7,8 +7,8 @@
 
 class HuffmanCompression{
 
+    private:
     std::priority_queue<data_structures::TreeNode*, std::vector<data_structures::TreeNode*>, data_structures::TreeNode::compare> node_minheap;
-    std::unordered_map<std::string, size_t> huffman_length_map;
     std::unordered_map<std::string, std::string> huffman_binary_map;
     std::string * file_content;
     std::string binary_code;
@@ -26,9 +26,7 @@ class HuffmanCompression{
 
     data_structures::TreeNode * constructHuffmanTree(std::priority_queue<data_structures::TreeNode*, std::vector<data_structures::TreeNode*>, data_structures::TreeNode::compare> &node_minheap);
 
-    void populateLengthMap(data_structures::TreeNode * huffman_tree, std::unordered_map<std::string, size_t> &huffman_map, size_t code_length);
-
-    void convertLengthMapToBinary(std::unordered_map<std::string, size_t> &length_map, std::unordered_map<std::string, std::string> &huffman_binary_map);
+    void populateBinaryMap(data_structures::TreeNode * huffman_tree, std::unordered_map<std::string, std::string> &huffman_map, std::string &code_str);
 
     void addOne(std::string &code);
 
@@ -38,7 +36,7 @@ class HuffmanCompression{
 
     void attachHeader(std::string &binary_str, std::unordered_map<std::string, std::string> &huffman_binary_map);
 
-    struct comparator {
+    struct comparator {//priority queue comparator
         bool operator()(const std::pair<std::string,size_t> &left, const std::pair<std::string,size_t> &right);
     };
 

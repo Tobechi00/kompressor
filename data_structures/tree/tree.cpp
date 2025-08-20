@@ -9,9 +9,7 @@ namespace data_structures{
 
     TreeNode::~TreeNode(){
         delete this -> left;
-
         delete this -> right;
-
     }
 
     bool TreeNode::compare::operator()(const TreeNode * node_a, const TreeNode * node_b){

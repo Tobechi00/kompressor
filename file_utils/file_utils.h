@@ -1,15 +1,14 @@
 #pragma once
 
+#include <filesystem>
 #include <fstream>
 #include <string>
-#include <sys/types.h>
 
 //destructor needed
 
 class FileUtils{
     private:
-    std::string file_name;
-    std::string file_directory;
+    std::filesystem::path file_path;
     std::ifstream raw_file;
     std::string file_content;
     bool is_valid;
@@ -24,6 +23,5 @@ class FileUtils{
 
     private:
     void readFileContent(const std::string &directory);
-    void getFileNameFromPath(const std::string &directory, std::string &file_name);
-    u_int8_t convertChunkToByte(const std::string &chunk);
+    uint8_t convertChunkToByte(const std::string &chunk);
 };

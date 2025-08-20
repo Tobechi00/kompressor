@@ -8,21 +8,22 @@
 #include <unordered_map>
 #include "huffman_decompression.h"
 
-//#define byte u_int8_t use this
+#define BYTE_SIZE 8
+
+//#define byte uint8_t use this
 
 HuffmanDecompression::HuffmanDecompression(const std::string &file_content){
 
     //decompression style
     // first 4 bytes = decode map length
-    // after comes file content
-    //
+    // next decode map is extracted
+    // finally file content
+
     std::unordered_map<std::string, std::string> code_map;
 
-    int code_start_pos = populateDictionary(code_map, file_content);
+    size_t code_start_pos = populateDictionary(code_map, file_content);
 
     std::string converted_code;
-
-
 
     for(int i = code_start_pos; i < file_content.size(); i++){
         converted_code.append(convertBigEndian(file_content[i]));
@@ -39,15 +40,16 @@ HuffmanDecompression::HuffmanDecompression(const std::string &file_content){
         }
     }
 
+    this -> decompressed_text = final_str;
 
-    for(const auto &pair : code_map){
-        std::cout << pair.first <<" -- "<<pair.second << "\n";
-    }
-    std::cout<< final_str;
+    size_t original_len = file_content.length();
+    size_t new_len = final_str.length();
+
+
+    std::cout <<"file decompressed \n";
 }
 
 int HuffmanDecompression::getCharByteLength(std::string first_byte){
-
     int byte_len;
 
     if(first_byte[0] == '0'){//1 byte
@@ -81,8 +83,8 @@ size_t HuffmanDecompression::convertBinaryToDecimal(std::string &binary_string){
 
 //when bytes are read they are read with the least significant bit first
 //because of this we get an invalid char, so we reverse to make it big endian
-std::string HuffmanDecompression::convertBigEndian(u_int8_t byte){
-    std::bitset<8> bit_rep(byte);
+std::string HuffmanDecompression::convertBigEndian(uint8_t byte){
+    std::bitset<BYTE_SIZE> bit_rep(byte);
 
     std::string val = bit_rep.to_string();
     std::reverse(val.begin(), val.end());
@@ -90,7 +92,7 @@ std::string HuffmanDecompression::convertBigEndian(u_int8_t byte){
     return val;
 }
 
-char HuffmanDecompression::byteToChar(u_int8_t byte){
+char HuffmanDecompression::byteToChar(uint8_t byte){
     std::string temp = convertBigEndian(byte);
     char char_val =  static_cast<char>(convertBinaryToDecimal(temp));
 
@@ -98,11 +100,12 @@ char HuffmanDecompression::byteToChar(u_int8_t byte){
 }
 
 //populates dictionary and returns position of code start
-int HuffmanDecompression::populateDictionary(std::unordered_map<std::string, std::string> &code_map, const std::string &file_content){
+size_t HuffmanDecompression::populateDictionary(std::unordered_map<std::string, std::string> &code_map, const std::string &file_content){
     size_t content_ptr = 0;
     std::string len_str;
 
-    for(int i = 0; i < 4; i++){
+
+    for(int i = 0; i < 4; i++){//extract map length stored in first four bytes
         len_str.append(convertBigEndian(file_content[content_ptr]));
         content_ptr++;
     }
@@ -137,6 +140,7 @@ int HuffmanDecompression::populateDictionary(std::unordered_map<std::string, std
 
         code_map[code_str] = key;
     }
+
     return content_ptr;
 }
 

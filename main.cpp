@@ -2,7 +2,7 @@
 
 
 int main(int argc, char* argv[]){
-
-    commands::parseCommand(argc, argv);
+    Commands command;
+    command.parseCommand(argc, argv);
 
 }
