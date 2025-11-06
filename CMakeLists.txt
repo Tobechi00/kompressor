@@ -16,13 +16,13 @@ project(${PROJECT_NAME})
 FILE(GLOB SRCS "*.cpp" "*.c")
 
 set(SRCS
-    main.cpp
-    data_structures/tree/tree.cpp
-    compression_algorithms/huffman_compression/huffman_compression.cpp
-    file_utils/file_utils.cpp
-    commands/commands.cpp
-    compression_algorithms/run_length_encoder/run_length_encoder.cpp
-    decompression_algorithms/huffman_decompression/huffman_decompression.cpp
+    src/main.cpp
+    src/data_structures/tree/tree.cpp
+    src/compression_algorithms/huffman_compression/huffman_compression.cpp
+    src/file_utils/file_utils.cpp
+    src/commands/commands.cpp
+    src/compression_algorithms/run_length_encoder/run_length_encoder.cpp
+    src/decompression_algorithms/huffman_decompression/huffman_decompression.cpp
 )
 
 ## Define the executable

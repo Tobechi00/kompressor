@@ -3,9 +3,9 @@
 #include <string>
 #include <iostream>
 #include <unordered_set>
-#include "decompression_algorithms/huffman_decompression/huffman_decompression.h"
-#include "file_utils/file_utils.h"
-#include "compression_algorithms/huffman_compression/huffman_compression.h"
+#include "src/decompression_algorithms/huffman_decompression/huffman_decompression.h"
+#include "src/file_utils/file_utils.h"
+#include "src/compression_algorithms/huffman_compression/huffman_compression.h"
 
 
 void Commands::parseCommand(int command_len, char *command_array[]){
@@ -32,7 +32,7 @@ void Commands::executeCommand(std::string &command, std::string &value){
     std::unordered_set<std::string> compressables = {".txt", ".word"," ", ".avif"};
     std::unordered_set<std::string> decompressables = {".kmp"};
 
-    if(command == "-c" || command == "--compress"){ //value can only be a string, attempt to compress
+    if(command == "-c" || command == "--compress" ){ //value can only be a string, attempt to compress
 
         std::string extension = file_path.extension();
 

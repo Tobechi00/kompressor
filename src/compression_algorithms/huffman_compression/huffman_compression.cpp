@@ -1,5 +1,5 @@
 #include "huffman_compression.h"
-#include "data_structures/tree/tree.h"
+#include "src/data_structures/tree/tree.h"
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
