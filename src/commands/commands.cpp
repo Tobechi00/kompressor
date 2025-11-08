@@ -7,24 +7,27 @@
 #include "src/file_utils/file_utils.h"
 #include "src/compression_algorithms/huffman_compression/huffman_compression.h"
 
+/* current command list
+ * --compress   | -c
+ * --decompress | -d
+ * --help       | -h
+ */
+
 
 void Commands::parseCommand(int command_len, char *command_array[]){
 
-    if(command_len == 1){
-        displayHelpMenu();
-    }else if(command_len == 2){
+    if(command_len == 2){
         std::string first_command(command_array[1]);
         executeCommand(first_command);
     }else if(command_len == 3){
         std::string first_command(command_array[1]);
         std::string second_command(command_array[2]);
         executeCommand(first_command, second_command);
-    }else{
+    }else{//no available commands shorter than 2 or longer than 3
         std::cerr << "unrecognised command. See \'kompressor --help\'\n";
     }
 }
 
-    //temporary
 void Commands::executeCommand(std::string &command, std::string &value){
 
     std::filesystem::path file_path = std::filesystem::path(value);
@@ -32,7 +35,7 @@ void Commands::executeCommand(std::string &command, std::string &value){
     std::unordered_set<std::string> compressables = {".txt", ".word"," ", ".avif"};
     std::unordered_set<std::string> decompressables = {".kmp"};
 
-    if(command == "-c" || command == "--compress" ){ //value can only be a string, attempt to compress
+    if(command == "-c" || command == "--compress" ){
 
         std::string extension = file_path.extension();
 
@@ -61,16 +64,12 @@ void Commands::executeCommand(std::string &command, std::string &value){
         FileUtils file_util(value);
         HuffmanDecompression huffman_decompression(file_util.getFileContent());
         file_util.createFile(huffman_decompression.getDecompressedText());
-
-
-        // for(const auto pair : huffman_decompression.getMap()){
-        //     std::cout << pair.first +"  "+pair.second << "\n";
-        // }
     }else{
         std::cerr << "kompressor: \"" << command << "\" is not a kompressor command. See \'kompressor --help\'\n";
     }
 }
 
+//overload for solo commands
 void Commands::executeCommand(std::string &command){
     if(command == "-h" || command == "--help"){
         displayHelpMenu();

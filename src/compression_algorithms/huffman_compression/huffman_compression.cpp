@@ -236,7 +236,7 @@ void HuffmanCompression::attachHeader(std::string &binary_code, std::unordered_m
     int map_size = huffman_binary_map.size();//size of map not str
 
     //map size has a possibility to be very large but
-    //thankfully nothing a good ol 32bit int cant hold
+    //thankfully nothing a good ol 32bit int can't hold
 
     uint32_t char_rep = static_cast<uint32_t>(map_size);
     std::bitset<32> maplen_bit_rep(char_rep);
