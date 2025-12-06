@@ -1,150 +1,136 @@
-#include <algorithm>
 #include <bitset>
 #include <cmath>
-#include <cstddef>
+#include <cstdint>
+#include <fstream>
+#include <ios>
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <sys/types.h>
 #include <unordered_map>
 #include "huffman_decompression.h"
+#include "src/util/util.h"
 
-#define BYTE_SIZE 8
 
-//#define byte uint8_t use this
+HuffmanDecompression::HuffmanDecompression( std::string &file_path){
 
-HuffmanDecompression::HuffmanDecompression(const std::string &file_content){
+    std::ifstream compressed_file(file_path, std::ios::binary);
 
-    //decompression style
-    // first 4 bytes = decode map length
-    // next decode map is extracted
-    // finally file content
+    std::ofstream decompressed_file(util::generateDecompressionOut(file_path));
+
+    if(!compressed_file.is_open()){
+        std::cerr << "Unable to open file" << "\n";
+        return;
+    }
 
     std::unordered_map<std::string, std::string> code_map;
 
-    size_t code_start_pos = populateDictionary(code_map, file_content);
+    populateDictionary(code_map, compressed_file);
 
-    std::string converted_code;
+    decodeText(compressed_file, decompressed_file, code_map);
 
-    for(int i = code_start_pos; i < file_content.size(); i++){
-        converted_code.append(convertBigEndian(file_content[i]));
+}
+
+
+void HuffmanDecompression::populateDictionary(
+    std::unordered_map<std::string, std::string> &code_map,
+    std::ifstream &compressed_file
+){
+
+    int dict_size = static_cast<int>(util::read_32bits(compressed_file));//read first 4 bytes
+
+
+    while(dict_size > 0){
+
+        std::string char_rep;
+
+        uint8_t f_char = compressed_file.get();//get first char;
+        char_rep.push_back(f_char);
+
+        int byte_count = util::getByteCount(f_char) - 1;//read byte and code length
+
+        if(byte_count > 1){
+            char rem_chars[byte_count];
+            compressed_file.read(rem_chars, byte_count);
+
+            if(compressed_file.fail()){
+                std::cerr << "an error occured while reading file";
+                return;
+            }
+
+            for(int i = 0; i < byte_count; i++){
+                char_rep.push_back(rem_chars[i]);
+            }
+        }
+
+        //check for failure more
+
+        int code_len = static_cast<int>(util::read_32bits(compressed_file));
+
+        int req_byte = code_len + 7;
+        req_byte = (req_byte & ~7)/8;
+
+        char code_arr[req_byte];
+        compressed_file.read(code_arr, req_byte);
+
+
+        std::string code;
+
+        for(int i = 0; i < req_byte; i++){
+            std::bitset<8> set(code_arr[i]);
+            code.append(set.to_string());
+        }
+
+        code = code.substr(0, code_len);//reduce to actual length
+
+        code_map[code] = char_rep;
+        dict_size--;
     }
+}
 
-    std::string final_str;
-    std::string buffer;
+//issue stops at ZI in dictionary fix!!
+void HuffmanDecompression::decodeText(
+    std::ifstream &compressed_file,
+    std::ofstream &decompressed_file,
+    std::unordered_map<std::string,
+    std::string> &dictionary
+){
 
-    for(char c : converted_code){
-        buffer.push_back(c);
-        if(code_map.find(buffer) != code_map.end()){
-            final_str.append(code_map[buffer]);
-            buffer.clear();
+    char buffer[util::CHBUF_SIZ];
+
+    std::string text;
+    std::string rem_chars;
+
+    while(compressed_file.read(buffer, util::CHBUF_SIZ)){
+
+    std::string utf8_char;
+
+        if(!rem_chars.empty()){
+            utf8_char.append(rem_chars);
+            rem_chars.clear();
+        }
+
+        for(int i = 0; i <= compressed_file.gcount(); i++){
+
+            for(int j = 7; j >= 0; j--){
+                int bit = util::getNthBit(buffer[i], j);
+                utf8_char.append(std::to_string(bit));
+
+                if(dictionary.find(utf8_char) != dictionary.end()){
+                    text.append(dictionary[utf8_char]);
+                    utf8_char.clear();
+                }
+            }
+        }
+
+        decompressed_file << text;
+
+        text.clear();
+
+        if(!utf8_char.empty()){
+            rem_chars.append(utf8_char);
         }
     }
 
-    this -> decompressed_text = final_str;
-
-    size_t original_len = file_content.length();
-    size_t new_len = final_str.length();
-
-
-    std::cout <<"file decompressed \n";
-}
-
-int HuffmanDecompression::getCharByteLength(std::string first_byte){
-    int byte_len;
-
-    if(first_byte[0] == '0'){//1 byte
-        byte_len = 1;
-    }else if(first_byte[0] == '1' && first_byte[1] == '1' && first_byte[2] == '0'){//2 bytes
-        byte_len = 2;
-    }else if(first_byte[0] == '1' && first_byte[1] == '1' && first_byte[2] == '1' && first_byte[3] == '0'){
-        byte_len = 3;
-    }else if(first_byte[0] == '1' && first_byte[1] == '1' && first_byte[2] == '1' && first_byte[3] == '1' && first_byte[4] == '0'){
-        byte_len = 4;
-    }
-
-    return byte_len;
-}
-
-size_t HuffmanDecompression::convertBinaryToDecimal(std::string &binary_string){
-    size_t ans = 0;
-    size_t exponent = binary_string.length() - 1;
-
-    for(size_t i = 0; i < binary_string.length(); i++){
-        int bit = binary_string[i] - '0';
-        ans += bit * std::pow(2, exponent);
-
-        exponent--;
-    }
-
-    return ans;
-}
-
-
-
-//when bytes are read they are read with the least significant bit first
-//because of this we get an invalid char, so we reverse to make it big endian
-std::string HuffmanDecompression::convertBigEndian(uint8_t byte){
-    std::bitset<BYTE_SIZE> bit_rep(byte);
-
-    std::string val = bit_rep.to_string();
-    std::reverse(val.begin(), val.end());
-
-    return val;
-}
-
-char HuffmanDecompression::byteToChar(uint8_t byte){
-    std::string temp = convertBigEndian(byte);
-    char char_val =  static_cast<char>(convertBinaryToDecimal(temp));
-
-    return char_val;
-}
-
-//populates dictionary and returns position of code start
-size_t HuffmanDecompression::populateDictionary(std::unordered_map<std::string, std::string> &code_map, const std::string &file_content){
-    size_t content_ptr = 0;
-    std::string len_str;
-
-
-    for(int i = 0; i < 4; i++){//extract map length stored in first four bytes
-        len_str.append(convertBigEndian(file_content[content_ptr]));
-        content_ptr++;
-    }
-
-    size_t map_len = convertBinaryToDecimal(len_str);
-
-    for(size_t i = 0; i < map_len; i++){
-
-        std::string first_byte = convertBigEndian(file_content[content_ptr]);
-        int num_bytes = getCharByteLength(first_byte) - 1;//already have first byte so reduce by one
-        std::string key;
-
-        key.push_back(byteToChar(file_content[content_ptr]));
-
-        for(int j = 0; j < num_bytes; j++){
-            content_ptr++;
-            key.push_back(byteToChar(file_content[content_ptr]));
-        }
-
-        content_ptr++;//move to next byte
-        std::string code_len_str = convertBigEndian(file_content[content_ptr]);
-        int code_len = convertBinaryToDecimal(code_len_str);
-
-        std::string code_str;
-        for(int i = 0; i < 4; i++){
-            content_ptr++;
-            code_str.append(convertBigEndian(file_content[content_ptr]));
-        }
-
-        code_str = code_str.substr(0, code_len);
-        content_ptr++;//move to next starting point
-
-        code_map[code_str] = key;
-    }
-
-    return content_ptr;
-}
-
-
-std::string& HuffmanDecompression::getDecompressedText(){
-    return this->decompressed_text;
+    std::cout << rem_chars;
 }

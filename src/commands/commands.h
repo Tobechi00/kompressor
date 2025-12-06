@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _COMMANDS_H
+#define _COMMANDS_H
+
 #include <string>
 #include <unordered_set>
 
@@ -19,3 +21,5 @@ class Commands{
 
     void displayHelpMenu();
 };
+
+#endif

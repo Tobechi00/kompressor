@@ -4,7 +4,6 @@
 #include <iostream>
 #include <unordered_set>
 #include "src/decompression_algorithms/huffman_decompression/huffman_decompression.h"
-#include "src/file_utils/file_utils.h"
 #include "src/compression_algorithms/huffman_compression/huffman_compression.h"
 
 /* current command list
@@ -39,21 +38,14 @@ void Commands::executeCommand(std::string &command, std::string &value){
 
         std::string extension = file_path.extension();
 
-        if(compressables.find(extension) == compressables.end() && !extension.empty()){//FIXXXXX
+        if(compressables.find(extension) == compressables.end() && !extension.empty()){
             std::cerr << "inputed file is not a text file \n";
             return;
         }
 
-        try {
-            FileUtils file_util(value);
+        HuffmanCompression huffman_compression(value);//path
 
-            HuffmanCompression huffman_compression(file_util.getFileContent());
-
-            file_util.createCompressedFile(huffman_compression.getBinaryCode());
-
-        } catch (std::exception &e) {
-            std::cerr << e.what();
-        }
+                //new write
     }else if(command == "-d" || command == "--decompress"){
 
         if(decompressables.find(file_path.extension()) == decompressables.end()){
@@ -61,9 +53,8 @@ void Commands::executeCommand(std::string &command, std::string &value){
             return;
         }
 
-        FileUtils file_util(value);
-        HuffmanDecompression huffman_decompression(file_util.getFileContent());
-        file_util.createFile(huffman_decompression.getDecompressedText());
+        HuffmanDecompression huffman_decompression(value);
+        // file_util.createFile(huffman_decompression.getDecompressedText());
     }else{
         std::cerr << "kompressor: \"" << command << "\" is not a kompressor command. See \'kompressor --help\'\n";
     }

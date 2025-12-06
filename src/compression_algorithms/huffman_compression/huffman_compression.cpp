@@ -1,94 +1,127 @@
 #include "huffman_compression.h"
 #include "src/data_structures/tree/tree.h"
+#include "src/util/util.h"
+#include "src/util/util.h"
 #include <bitset>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <queue>
 #include <string>
 #include <iostream>
+#include <sys/types.h>
 #include <unordered_map>
 #include <vector>
 
-#define BYTE_SIZE 8
+HuffmanCompression::HuffmanCompression(std::string &file_path){
 
-//rework encoding
-HuffmanCompression::HuffmanCompression(const std::string &file_content){
+    //open read file
+    std::ifstream file(file_path);
+
+    if(!file.is_open()){
+        std::cerr << "an error occurred while opening file" << '\n';
+        return;
+    }
 
     //construct huffman tree
-    populateNodeMinHeap(file_content, this -> node_minheap);
+    buffPopulateNodeMinHeap(file, this -> node_minheap);
     data_structures::TreeNode * huffman_tree = constructHuffmanTree(this -> node_minheap);
 
+
     //construct map
-    size_t code_length = 0;
     std::string code_str("");
     populateBinaryMap(huffman_tree, this -> huffman_binary_map, code_str);//populate length
 
     delete huffman_tree;
 
+    //open out_file
+    std::ofstream out_file(
+        util::generateCompressionOut(file_path),
+        std::ios::binary | std::ios::trunc
+    );
+
+    if(!out_file.is_open()){
+        std::cerr << "error opening output file";
+        return;
+    }
+
     //convert and attach map as file header
-    attachHeader(this -> binary_code, this -> huffman_binary_map);
-    encodeContent(file_content, this -> binary_code, this -> huffman_binary_map);
+    attachHeader(out_file, this -> huffman_binary_map);
 
-    size_t old_size = file_content.length() * BYTE_SIZE;
-    size_t new_size = this -> binary_code.length();
+    //reset file pointer
+    file.clear();
+    file.seekg(0, file.beg);
 
-    std::cout << "old size: "<< old_size << "bits \n";
-    std::cout << "new size: "<< new_size << "bits \n";
+    //rework buffer endcoding and writing to disk dont hold code in memory
+    buffEncodeContent(file, out_file, this -> binary_code, this -> huffman_binary_map);
+
+    file.clear();
+
+    file.seekg(0, std::ifstream::end);
+    out_file.seekp(0, std::ofstream::end);
+
+    std::cout << this -> huffman_binary_map.size() << "\n";
+
+    size_t old_size = file.tellg();
+    // change
+    size_t new_size = out_file.tellp();
+
+    std::cout << "old size: "<< old_size << "bytes \n";
+    std::cout << "new size: "<< new_size << "bytes \n";
 
     if(new_size < old_size){
         size_t savings = old_size - new_size;
-        std::cout << "total space saved: "<< savings << "bits \n";
+        std::cout << "total space saved: "<< savings << "bytes \n";
     }else if(new_size == old_size){
         std::cout << "file saw no change with compression\n";
     }else{
         std::cout << "file saw a size increment with compression \n";
     }
 
+    file.close();
+    out_file.close();
 }
 
-/*
- * add values to min heap
- */
-void HuffmanCompression::populateNodeMinHeap(const std::string &file_content, std::priority_queue<data_structures::TreeNode*, std::vector<data_structures::TreeNode*>, data_structures::TreeNode::compare> &node_minheap){
-    std::unordered_map<std::string, size_t> frequency_map;
 
+void HuffmanCompression::populateNodeMinHeap(
+    const std::string &file_content,
+    std::unordered_map<std::string, size_t> &frequency_map,
+    std::priority_queue<data_structures::TreeNode*,
+    std::vector<data_structures::TreeNode*>, data_structures::TreeNode::compare> &node_minheap
+){
     std::string buffer;
 
-    //sepearator for utf - 8 strings
-    for(uint8_t c : file_content){
-        std::bitset<BYTE_SIZE> bits(c);
-        std::string bitval = bits.to_string();
+    //separator for utf - 8 strings
+    for(uint8_t byte : file_content){
+        bool is_runon = ((byte & 0xC0) == 0x80);
 
-        if(bitval.at(0) == '1' && bitval.at(1) == '0'){
-            buffer.push_back(c);
+        if(is_runon){
+            buffer.push_back(byte);
         }else{
             if(buffer.empty()){
-                buffer.push_back(c);
+                buffer.push_back(byte);
             }else{
                 frequency_map[buffer]++;
                 buffer.clear();
-                buffer.push_back(c);
+                buffer.push_back(byte);
             }
         }
     }
-
 
     if(!buffer.empty()){
         frequency_map[buffer]++;
     }
 
-    for(const auto &map_pair : frequency_map){//loop through address
-        data_structures::TreeNode * node = new data_structures::TreeNode(map_pair.second, map_pair.first);
-        node_minheap.push(node);
-    }
 }
 
-/*
- * construct huffman tree using node min_heap;
- */
-
-data_structures::TreeNode * HuffmanCompression::constructHuffmanTree(std::priority_queue<data_structures::TreeNode*, std::vector<data_structures::TreeNode*>, data_structures::TreeNode::compare> &node_minheap){
+//huffman tree generated using node minheap
+data_structures::TreeNode * HuffmanCompression::constructHuffmanTree(
+    std::priority_queue<data_structures::TreeNode*,
+    std::vector<data_structures::TreeNode*>,
+    data_structures::TreeNode::compare> &node_minheap
+){
     while(node_minheap.size() > 1){
         data_structures::TreeNode * combination_node;
 
@@ -113,10 +146,12 @@ data_structures::TreeNode * HuffmanCompression::constructHuffmanTree(std::priori
     return head_node;
 }
 
-/*
- * create decode map which allows for decompression
- */
-void HuffmanCompression::populateBinaryMap(data_structures::TreeNode * huffman_tree, std::unordered_map<std::string, std::string> &huffman_map, std::string &code_str){
+//create decode map which allows for decompression
+void HuffmanCompression::populateBinaryMap(
+    data_structures::TreeNode * huffman_tree,
+    std::unordered_map<std::string, std::string> &huffman_map,
+    std::string &code_str
+){
     if(huffman_tree -> left == nullptr && huffman_tree -> right == nullptr){
         huffman_map[huffman_tree -> value] =  code_str;
         return;
@@ -134,7 +169,10 @@ void HuffmanCompression::populateBinaryMap(data_structures::TreeNode * huffman_t
 
 
 //comparator sorts by code length then by character if code length is the same
-bool HuffmanCompression::comparator::operator()(const std::pair<std::string, size_t> &left, const std::pair<std::string, size_t> &right) {
+bool HuffmanCompression::comparator::operator()(
+    const std::pair<std::string, size_t> &left,
+    const std::pair<std::string, size_t> &right
+) {
 
     if(left.second == right.second){
         return left.first.length() < right.first.length();
@@ -143,40 +181,12 @@ bool HuffmanCompression::comparator::operator()(const std::pair<std::string, siz
     return left.second < right.second;
 }
 
-//used to increment binary representation
-void HuffmanCompression::addOne(std::string &code){
-
-    bool has_remainder = false;
-
-    for(size_t i = code.length() - 1; i >= 0; i--){
-
-        if(!has_remainder){
-            if(code[i] == '0'){
-                code[i] = '1';
-                break;
-            }else{
-                code[i] = '0';
-                has_remainder = true;
-            }
-        }else{
-            if(code[i] == '0'){
-                code[i] = '1';
-                has_remainder = false;
-                break;
-            }else{
-                code[i] = '0';
-            }
-        }
-    }
-
-    if(has_remainder){
-        code = '1'+code;
-    }
-}
-
 
 //used to encode plain text to huffman coded binary
-void HuffmanCompression::encodeContent(const std::string &content, std::string &binary_code, std::unordered_map<std::string, std::string> &huffman_binary_map){
+std::string HuffmanCompression::encodeContent(
+    std::string &content,
+    std::unordered_map<std::string, std::string> &huffman_binary_map
+){
     std::string encoded_str;
 
     std::string buffer;
@@ -191,59 +201,224 @@ void HuffmanCompression::encodeContent(const std::string &content, std::string &
         }
     }
 
-    binary_code.append(encoded_str);
+    return encoded_str;
 }
 
+//encode content with a minum value allowed in memory at a time
+void HuffmanCompression::buffEncodeContent(
+    std::ifstream &file, std::ofstream &out_file,
+    std::string &binary_code,
+    std::unordered_map<std::string,
+    std::string> &huffman_binary_map
+){
 
-std::string& HuffmanCompression::getBinaryCode(){
-    return this -> binary_code;
+    std::string main_buffer;
+    std::string sub_buffer;
+
+    char buff[util::CHBUF_SIZ];
+
+    while(file.read(buff, util::CHBUF_SIZ)){
+
+        if(!sub_buffer.empty()){//flush reminant buffer to actual content
+            main_buffer.append(sub_buffer);
+            sub_buffer.clear();
+        }
+
+        int ptr = util::CHBUF_SIZ - 1;
+
+        //move pointer to start of character byte seq;
+        while((static_cast<uint8_t>(buff[ptr]) & 0xC0) == 0x80){ // 10xxyyyy & 11000000
+            //last character is a sequence;
+            ptr--;
+        }
+
+        int norm_byte_count = util::getByteCount(static_cast<uint8_t>(buff[ptr]));
+
+        if(norm_byte_count == 0){//change
+            std::cerr << "invalid first byte found" << '\n';
+            break;
+        }
+
+        int act_byte_count = (util::CHBUF_SIZ) - ptr;// actual amount of elements in sequence including start
+
+        for(int i = 0; i < ptr; i++){//portion before remainder
+            main_buffer.push_back(buff[i]);
+        }
+
+        if(act_byte_count < norm_byte_count){
+            for(int i = ptr; i < util::CHBUF_SIZ; i++){
+                sub_buffer.push_back(buff[i]);
+            }
+        }
+
+        std::string encoded_content = encodeContent(main_buffer, huffman_binary_map);
+        writeChar(encoded_content, out_file);
+
+        main_buffer.clear();//clear buff
+    }
+
+    //flush reminants and buffer
+    main_buffer.append(sub_buffer);
+
+    for(int i = 0; i < file.gcount(); i++){
+        main_buffer.push_back(buff[i]);
+    }
+
+    std::string encoded_content = encodeContent(main_buffer, huffman_binary_map);
+    writeChar(encoded_content, out_file);
 }
 
-void HuffmanCompression::attachHeader(std::string &binary_code, std::unordered_map<std::string, std::string> &huffman_binary_map){
+void HuffmanCompression::attachHeader(
+    std::ofstream &out_file,
+    std::unordered_map<std::string,
+    std::string> &huffman_binary_map
+){
+    std::string binary_code;
 
     //flatten map (dictionary) to put in file
-    // also attach 4byte length (32bit int)
     std::string flat_map;
-    int bit_len = 32;//32 but not 100%, high diversity of utf-8 may break this specifies the length of our huffmancode
+    int bit_len = 32;
+
+    int t_size = 0;
 
     for(const auto &pair : huffman_binary_map){
 
-        for(uint8_t byte : pair.first){//convert char to byte rep
-            std::bitset<BYTE_SIZE> bit_rep(byte);
-            flat_map.append(bit_rep.to_string());
+        //convert string to binary rep;
+        std::string char_rep;
+        for(char c : pair.first){
+            t_size++;
+            std::bitset<8> ch_set(c);
+            char_rep.append(ch_set.to_string());
         }
 
+        flat_map.append(char_rep);
+
+        //size of code
+        std::bitset<32> len_set(pair.second.length());
+        t_size += 4;
+
+        flat_map.append(len_set.to_string());
+
+        //add padding zeros to fit 8 bit
         std::string code(pair.second);
-        int code_len = code.length();
+        while(code.length()%8 != 0){//CHANGEEEE
+            code.append("0");
+        }
 
-        // padding code incase to fit one byte;
-        int remainder = bit_len - code_len;
-        std::string padding_zeros(remainder, '0');
-        code.append(padding_zeros);
-
-        //converting actual code length to byte_rep
-        uint8_t char_rep = static_cast<uint8_t>(code_len);
-        std::bitset<BYTE_SIZE> len_bit_rep(code_len);
-
-
-        //append code length
-        flat_map.append(len_bit_rep.to_string());
-
-        //append code itself
         flat_map.append(code);
+        t_size += (code.length()/8);
     }
 
-    int map_size = huffman_binary_map.size();//size of map not str
-
-    //map size has a possibility to be very large but
-    //thankfully nothing a good ol 32bit int can't hold
-
-    uint32_t char_rep = static_cast<uint32_t>(map_size);
-    std::bitset<32> maplen_bit_rep(char_rep);
+    std::bitset<32> size_set(huffman_binary_map.size());
+    t_size += 4;
 
 
+    binary_code.append(size_set.to_string());
 
-    binary_code.append(maplen_bit_rep.to_string());
     binary_code.append(flat_map);
-    //convert binary map to full binary
+
+    writeChar(binary_code, out_file);
+}
+
+void HuffmanCompression::buffPopulateNodeMinHeap(
+    std::ifstream &file,
+    std::priority_queue<data_structures::TreeNode*,
+    std::vector<data_structures::TreeNode*>,
+    data_structures::TreeNode::compare> &node_minheap
+){
+    std::string main_buffer;
+    std::string sub_buffer;
+
+    std::unordered_map<std::string, size_t> frequency_map;
+
+    char buff[util::CHBUF_SIZ];
+
+    while(file.read(buff, util::CHBUF_SIZ)){
+
+        if(!sub_buffer.empty()){//flush reminant buffer to actual content
+            main_buffer.append(sub_buffer);
+            sub_buffer.clear();
+        }
+
+        int ptr = util::CHBUF_SIZ - 1;
+
+        //move pointer to start of character byte seq;
+        while((static_cast<uint8_t>(buff[ptr]) & 0xC0) == 0x80){ // 10xxyyyy & 11000000
+            //last character is a sequence;
+            ptr--;
+        }
+
+        int norm_byte_count = util::getByteCount(static_cast<uint8_t>(buff[ptr]));
+
+        if(norm_byte_count == 0){//
+            std::cerr << "unrecognized character found" << '\n';
+            break;
+        }
+
+        int act_byte_count = (util::CHBUF_SIZ) - ptr;// actual amount of elements in sequence including start
+
+        for(int i = 0; i < ptr; i++){//portion before remainder
+            main_buffer.push_back(buff[i]);
+        }
+
+        if(act_byte_count < norm_byte_count){
+            for(int i = ptr; i < util::CHBUF_SIZ; i++){
+                sub_buffer.push_back(buff[i]);
+            }
+        }
+
+        populateNodeMinHeap(main_buffer, frequency_map, node_minheap);
+        main_buffer.clear();//clear buff
+    }
+
+    //flush reminants and buffer
+    main_buffer.append(sub_buffer);
+
+    for(int i = 0; i < file.gcount(); i++){
+        main_buffer.push_back(buff[i]);
+    }
+
+    populateNodeMinHeap(main_buffer, frequency_map, node_minheap);
+
+    //added
+    for(const auto &map_pair : frequency_map){
+        data_structures::TreeNode * node = new data_structures::TreeNode(map_pair.second, map_pair.first);
+        node_minheap.push(node);
+    }
+}
+
+
+
+
+void HuffmanCompression::writeChar(
+    std::string &bits,
+    std::ofstream &binary_file
+){
+    std::string buffer;// accumilate string bit by bit;
+    for(const char c : bits){
+        if(buffer.size() == 8){
+            uint8_t byte = util::convertChunkToByte(buffer);
+
+            binary_file.put(byte);
+
+            buffer.clear();
+        }
+
+        buffer.push_back(c);
+
+    }
+
+    if(!buffer.empty()){//pad with zeros if not empty so
+        while (buffer.size() < 8) {
+            buffer.push_back('0');
+        }
+
+        uint8_t byte = util::convertChunkToByte(buffer);
+
+        std::bitset<8> set(byte);
+
+        binary_file.put(byte);
+
+        buffer.clear();
+    }
 }

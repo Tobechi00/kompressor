@@ -1,30 +1,29 @@
-#pragma once
+#ifndef _HUFFMAN_DECOMPRESSION_H
+#define _HUFFMAN_DECOMPRESSION_H
 
-#include <cstddef>
-#include <cstdint>
+#include <fstream>
 #include <string>
 #include <unordered_map>
 class HuffmanDecompression{
-    private:
-    std::string decompressed_text;
 
     public:
-    HuffmanDecompression(const std::string &file_content);
-
+    HuffmanDecompression(std::string &file_path);
     std::string& getDecompressedText();
 
     private:
     std::unordered_map<std::string, std::string>& getMap();
 
-    size_t convertBinaryToDecimal(std::string &binary_str);
+    void populateDictionary(
+        std::unordered_map<std::string, std::string> &str_code_map,
+        std::ifstream &file
+    );
 
-    int getCharByteLength(std::string first_byte);
+    void decodeText(
+        std::ifstream &compressed_file,
+        std::ofstream &decompressed_file,
+        std::unordered_map<std::string, std::string> &dictionary
+    );
 
-    std::string extractCode(const std::string &file_content, int code_len, int pos);
-
-    size_t populateDictionary(std::unordered_map<std::string, std::string> &str_code_map, const std::string &file_content);
-
-    std::string convertBigEndian(uint8_t byte);
-
-    char byteToChar(uint8_t byte);
 };
+
+#endif
