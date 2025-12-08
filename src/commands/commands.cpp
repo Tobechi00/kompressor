@@ -31,21 +31,10 @@ void Commands::executeCommand(std::string &command, std::string &value){
 
     std::filesystem::path file_path = std::filesystem::path(value);
 
-    std::unordered_set<std::string> compressables = {".txt", ".word"," ", ".avif"};
     std::unordered_set<std::string> decompressables = {".kmp"};
 
     if(command == "-c" || command == "--compress" ){
-
-        std::string extension = file_path.extension();
-
-        if(compressables.find(extension) == compressables.end() && !extension.empty()){
-            std::cerr << "inputed file is not a text file \n";
-            return;
-        }
-
         HuffmanCompression huffman_compression(value);//path
-
-                //new write
     }else if(command == "-d" || command == "--decompress"){
 
         if(decompressables.find(file_path.extension()) == decompressables.end()){
@@ -54,7 +43,6 @@ void Commands::executeCommand(std::string &command, std::string &value){
         }
 
         HuffmanDecompression huffman_decompression(value);
-        // file_util.createFile(huffman_decompression.getDecompressedText());
     }else{
         std::cerr << "kompressor: \"" << command << "\" is not a kompressor command. See \'kompressor --help\'\n";
     }

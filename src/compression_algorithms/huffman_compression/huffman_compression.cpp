@@ -54,30 +54,25 @@ HuffmanCompression::HuffmanCompression(std::string &file_path){
     file.clear();
     file.seekg(0, file.beg);
 
-    //rework buffer endcoding and writing to disk dont hold code in memory
-    buffEncodeContent(file, out_file, this -> binary_code, this -> huffman_binary_map);
 
-    file.clear();
+    buffEncodeContent(file, out_file, this -> huffman_binary_map);
 
-    file.seekg(0, std::ifstream::end);
-    out_file.seekp(0, std::ofstream::end);
 
-    std::cout << this -> huffman_binary_map.size() << "\n";
-
-    size_t old_size = file.tellg();
+    size_t old_size = util::getFileSize(file);
     // change
-    size_t new_size = out_file.tellp();
+    size_t new_size = util::getFileSize(out_file);
 
-    std::cout << "old size: "<< old_size << "bytes \n";
-    std::cout << "new size: "<< new_size << "bytes \n";
+    std::cout << "approx file size: "<< old_size << "KB \n";
+    std::cout << "approx compressed file size: "<< new_size << "KB \n";
 
     if(new_size < old_size){
         size_t savings = old_size - new_size;
-        std::cout << "total space saved: "<< savings << "bytes \n";
+        std::cout << "total space saved: "<< savings << "KB \n";
     }else if(new_size == old_size){
         std::cout << "file saw no change with compression\n";
     }else{
-        std::cout << "file saw a size increment with compression \n";
+        size_t gain = new_size - old_size;
+        std::cout << "file saw a size increment of: " << gain << "KB with compression \n";
     }
 
     file.close();
@@ -207,7 +202,6 @@ std::string HuffmanCompression::encodeContent(
 //encode content with a minum value allowed in memory at a time
 void HuffmanCompression::buffEncodeContent(
     std::ifstream &file, std::ofstream &out_file,
-    std::string &binary_code,
     std::unordered_map<std::string,
     std::string> &huffman_binary_map
 ){
@@ -224,7 +218,9 @@ void HuffmanCompression::buffEncodeContent(
             sub_buffer.clear();
         }
 
-        int ptr = util::CHBUF_SIZ - 1;
+        size_t amt_read = file.gcount();
+
+        int ptr = amt_read - 1;
 
         //move pointer to start of character byte seq;
         while((static_cast<uint8_t>(buff[ptr]) & 0xC0) == 0x80){ // 10xxyyyy & 11000000
@@ -234,19 +230,19 @@ void HuffmanCompression::buffEncodeContent(
 
         int norm_byte_count = util::getByteCount(static_cast<uint8_t>(buff[ptr]));
 
-        if(norm_byte_count == 0){//change
-            std::cerr << "invalid first byte found" << '\n';
-            break;
+        if(norm_byte_count == 0){
+            std::cerr << "unknown character read" << '\n';
+            return;
         }
 
-        int act_byte_count = (util::CHBUF_SIZ) - ptr;// actual amount of elements in sequence including start
+        int act_byte_count = amt_read - ptr;// actual amount of elements in sequence including start
 
         for(int i = 0; i < ptr; i++){//portion before remainder
             main_buffer.push_back(buff[i]);
         }
 
         if(act_byte_count < norm_byte_count){
-            for(int i = ptr; i < util::CHBUF_SIZ; i++){
+            for(int i = ptr; i < amt_read; i++){
                 sub_buffer.push_back(buff[i]);
             }
         }
@@ -301,7 +297,7 @@ void HuffmanCompression::attachHeader(
 
         //add padding zeros to fit 8 bit
         std::string code(pair.second);
-        while(code.length()%8 != 0){//CHANGEEEE
+        while(code.length()%8 != 0){
             code.append("0");
         }
 

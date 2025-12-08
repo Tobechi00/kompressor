@@ -5,7 +5,7 @@
 
 namespace data_structures{
 
-    struct TreeNode{// tree node def
+    struct TreeNode{
 
         std::size_t frequency;
         std::string value;

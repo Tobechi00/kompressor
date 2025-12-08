@@ -20,7 +20,6 @@ set(SRCS
     src/data_structures/tree/tree.cpp
     src/compression_algorithms/huffman_compression/huffman_compression.cpp
     src/commands/commands.cpp
-    src/compression_algorithms/run_length_encoder/run_length_encoder.cpp
     src/decompression_algorithms/huffman_decompression/huffman_decompression.cpp
     src/util/util.cpp
 )

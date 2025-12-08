@@ -1,5 +1,6 @@
 #include "src/util/util.h"
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -18,6 +19,8 @@ namespace util{
 
         return static_cast<uint8_t>(ans);
     }
+
+
 
     std::string generateCompressionOut(std::string &original_path){
         std::filesystem::path file_path(original_path);
@@ -53,7 +56,7 @@ namespace util{
         return bit_val == 0x1 ? 1 : 0;
     }
 
-    uint32_t read_32bits(std::ifstream &file){////////
+    uint32_t read_32bits(std::ifstream &file){
 
         uint32_t bits = 0x0000;
         char buff[4];
@@ -68,5 +71,27 @@ namespace util{
 
         return bits;
     }
+
+    size_t getFileSize(std::ifstream &file){
+        file.clear();
+        file.seekg(0, std::ifstream::end);
+        size_t file_size = file.tellg();
+
+        file_size = file_size / 1000;
+
+        return file_size;
+    }
+
+    size_t getFileSize(std::ofstream &file){
+        file.clear();
+        file.seekp(0, std::ofstream::end);
+        size_t file_size = file.tellp();
+
+        file_size = file_size / 1000;
+
+        return file_size;
+    }
+
+
 
 }

@@ -48,7 +48,6 @@ class HuffmanCompression{
     void buffEncodeContent(
         std::ifstream &file,
         std::ofstream &out_file,
-        std::string &binary_code,
         std::unordered_map<std::string,
         std::string> &huffman_binary_map
     );

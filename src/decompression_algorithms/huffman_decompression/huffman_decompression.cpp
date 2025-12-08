@@ -1,5 +1,6 @@
 #include <bitset>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <ios>
@@ -23,12 +24,23 @@ HuffmanDecompression::HuffmanDecompression( std::string &file_path){
         return;
     }
 
+    if(!decompressed_file.is_open()){
+        std::cerr << "Unable to write to output file" << "\n";
+        return;
+    }
+
     std::unordered_map<std::string, std::string> code_map;
 
     populateDictionary(code_map, compressed_file);
 
     decodeText(compressed_file, decompressed_file, code_map);
 
+    size_t new_size = util::getFileSize(decompressed_file);
+
+    std::cout << "approx file size post decompression: "<< new_size << "KB \n";
+
+    compressed_file.close();
+    decompressed_file.close();
 }
 
 
@@ -37,7 +49,7 @@ void HuffmanDecompression::populateDictionary(
     std::ifstream &compressed_file
 ){
 
-    int dict_size = static_cast<int>(util::read_32bits(compressed_file));//read first 4 bytes
+    size_t dict_size = static_cast<int>(util::read_32bits(compressed_file));//read first 4 bytes
 
 
     while(dict_size > 0){
@@ -63,11 +75,9 @@ void HuffmanDecompression::populateDictionary(
             }
         }
 
-        //check for failure more
+        size_t code_len = static_cast<size_t>(util::read_32bits(compressed_file));
 
-        int code_len = static_cast<int>(util::read_32bits(compressed_file));
-
-        int req_byte = code_len + 7;
+        size_t req_byte = code_len + 7;
         req_byte = (req_byte & ~7)/8;
 
         char code_arr[req_byte];
@@ -88,7 +98,6 @@ void HuffmanDecompression::populateDictionary(
     }
 }
 
-//issue stops at ZI in dictionary fix!!
 void HuffmanDecompression::decodeText(
     std::ifstream &compressed_file,
     std::ofstream &decompressed_file,
@@ -101,7 +110,9 @@ void HuffmanDecompression::decodeText(
     std::string text;
     std::string rem_chars;
 
-    while(compressed_file.read(buffer, util::CHBUF_SIZ)){
+    while(!compressed_file.eof()){
+
+    compressed_file.read(buffer, util::CHBUF_SIZ);
 
     std::string utf8_char;
 
@@ -110,7 +121,7 @@ void HuffmanDecompression::decodeText(
             rem_chars.clear();
         }
 
-        for(int i = 0; i <= compressed_file.gcount(); i++){
+        for(int i = 0; i < compressed_file.gcount(); i++){
 
             for(int j = 7; j >= 0; j--){
                 int bit = util::getNthBit(buffer[i], j);
@@ -123,6 +134,7 @@ void HuffmanDecompression::decodeText(
             }
         }
 
+        //write text to file
         decompressed_file << text;
 
         text.clear();
@@ -132,5 +144,4 @@ void HuffmanDecompression::decodeText(
         }
     }
 
-    std::cout << rem_chars;
 }

@@ -11,7 +11,7 @@ class Commands{
     std::unordered_set<std::string> decompressables;
 
     public:
-    Commands(): compressables({{".txt", ".word"," "}}), decompressables({".txt", ".word"," "}){};
+    Commands(): decompressables({".kmp"}){};
     void parseCommand(int command_count, char *command_array[]);
 
     private:
