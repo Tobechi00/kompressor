@@ -57,35 +57,54 @@ the map is then used to convert the remaining bytes back to their character form
 ensure you have cmake and a c++ environment installed
 
 clone this repo:
-gh repo clone Tobechi00/kompressor
+```
+git clone Tobechi00/kompressor
+```
 
 once done create a build folder in the main directory and cd into it:
+```
 mkdir build
 cd build
+```
 
 then run:
+```
 cmake ..
-
+```
 once finished build the project from inside the build directory using:
+```
 cmake --build .
+```
 
 ## Kompressor commands
 for now kompressor has only three commands:
 
 to compress run:
+```
 ./kompressor -c "file path"
+```
 or
+```
 ./kompressor --compress "file path"
+```
 
 to decompress a file with a .kmp extension run:
+```
 ./kompressor -d "file path"
+```
 or
+```
 ./kompressor --decompress "file path"
+```
 
 for a list of all commands run:
+```
 ./kompressor -h
+```
 or
+```
 ./kompressor --help
+```
 
 p.s I put a few test texts in the test_text folder incase you want to give it a try ;)
 
