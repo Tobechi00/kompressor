@@ -1,5 +1,5 @@
-#ifndef _COMMANDS_H
-#define _COMMANDS_H
+#ifndef COMMANDS_H
+#define COMMANDS_H
 
 #include <string>
 #include <unordered_set>

@@ -23,6 +23,7 @@ set(SRCS
     src/decompression_algorithms/huffman_decompression/huffman_decompression.cpp
     src/util/util.cpp
     src/AES/aes_encryption/aes_encryption.cpp
+    src/AES/key_scheduler/key_scheduler.cpp
     # src/AES/aes_encryption/aes_decryption.cpp
 )
 

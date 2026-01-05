@@ -1,5 +1,5 @@
-#ifndef _HUFFMAN_COMPRESSION_H
-#define _HUFFMAN_COMPRESSION_H
+#ifndef HUFFMAN_COMPRESSION_H
+#define HUFFMAN_COMPRESSION_H
 
 #include "src/data_structures/tree/tree.h"
 #include <fstream>

@@ -15,6 +15,7 @@
 
 HuffmanDecompression::HuffmanDecompression( std::string &file_path){
 
+
     std::ifstream compressed_file(file_path, std::ios::binary);
 
     std::ofstream decompressed_file(util::generateDecompressionOut(file_path));

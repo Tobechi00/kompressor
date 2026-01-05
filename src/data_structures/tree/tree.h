@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TREE_H
+#define TREE_H
 
 #include <cstddef>
 #include <string>
@@ -25,3 +26,5 @@ namespace data_structures{
         };
     };
 }
+
+#endif

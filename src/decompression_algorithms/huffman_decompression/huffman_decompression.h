@@ -1,5 +1,5 @@
-#ifndef _HUFFMAN_DECOMPRESSION_H
-#define _HUFFMAN_DECOMPRESSION_H
+#ifndef HUFFMAN_DECOMPRESSION_H
+#define HUFFMAN_DECOMPRESSION_H
 
 #include <fstream>
 #include <string>

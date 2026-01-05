@@ -1,13 +1,15 @@
-#ifndef _UTIL_H
-#define _UTIL_H
+#ifndef UTIL_H
+#define UTIL_H
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace util{
 
     const extern int CHBUF_SIZ;
+    const extern std::vector<std::vector<uint8_t>> s_box;
 
     //byte operations
     extern uint8_t convertChunkToByte(const std::string &chunk);
@@ -21,6 +23,8 @@ namespace util{
     //string operations
     extern std::string generateCompressionOut(std::string &original_path);
     extern std::string generateDecompressionOut(std::string &original_path);
+
+    extern std::pair<uint8_t, uint8_t> separate(uint8_t val);
 }
 
 #endif
